@@ -10,6 +10,18 @@ function HomeContent() {
   const { data: session } = useSession();
   const [pins, setPins] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState("All");
+
+  const categories = [
+    "All",
+    "Bikes",
+    "Hypercar",
+    "Photography",
+    "Buildings",
+    "Architecture",
+    "Food",
+    "Adnan Shah"
+  ];
 
   const searchParams = useSearchParams();
   const search = searchParams.get("search");
@@ -35,8 +47,19 @@ function HomeContent() {
     getPins();
   }, [search, session]);
 
+  const filteredPins = activeCategory === "All"
+    ? pins
+    : pins.filter((pin) => {
+      const catLower = activeCategory.toLowerCase();
+      return (
+        pin.tags?.some((t) => t.toLowerCase().includes(catLower)) ||
+        pin.title?.toLowerCase().includes(catLower) ||
+        pin.description?.toLowerCase().includes(catLower)
+      );
+    });
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-transparent">
       {search && (
         <div className="container mx-auto px-4 pt-6">
           <h2 className="text-2xl font-bold text-gray-800">
@@ -47,19 +70,40 @@ function HomeContent() {
           </p>
         </div>
       )}
-
+      {/* Category Filter Strip */}
+      {!loading && categories.length > 0 && (
+        <div className="sticky top-16 z-40 bg-[#f0f7ff]/95 backdrop-blur-md border-b border-blue-100 py-3">
+          <div className="container mx-auto px-4 flex items-center gap-3 overflow-x-auto no-scrollbar">
+            {categories.map((cat) => {
+              const isActive = activeCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`flex-shrink-0 px-4 py-2 text-sm font-semibold rounded-full whitespace-nowrap transition-all duration-200 ${isActive
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-200 transform scale-105"
+                    : "bg-white text-blue-900 hover:bg-blue-50 border border-blue-100 hover:border-blue-200"
+                    }`}
+                >
+                  {cat}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
       <div className="container mx-auto px-4 py-6">
         {loading ? (
           <div className="flex justify-center items-center min-h-[70vh]">
             <ClipLoader color="#3b82f6" size={60} />
           </div>
-        ) : pins.length > 0 ? (
+        ) : filteredPins.length > 0 ? (
           <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-3">
-            {pins.map((item) => (
+            {filteredPins.map((item) => (
               <Link
                 href={`/pin/${item._id}`}
                 key={item._id}
-                className="break-inside-avoid block mb-3 group relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300"
+                className="break-inside-avoid block mb-3 group relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-blue-200/50 transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02]"
               >
                 <img
                   src={item?.image?.url}
